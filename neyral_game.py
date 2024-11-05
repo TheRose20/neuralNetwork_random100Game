@@ -77,8 +77,8 @@ def neural_network_guess(model):
             guess = np.array([[prediction + feedback * 10]])  # Корректируем предположение
 
 
-def saveModel(model):
-    model.save('guessing_model.keras')
+def saveModel(model, name: str):
+    model.save(name)
 
 
 def get_repeat_count():
