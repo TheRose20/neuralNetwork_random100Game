@@ -37,9 +37,13 @@ def get_model_with_memory(name: str, path: str):
     else:
         model = tf.keras.Sequential([
             tf.keras.layers.Input(shape=input_shape),
-            tf.keras.layers.LSTM(128, activation='relu', return_sequences=False),
+            tf.keras.layers.LSTM(64, activation='relu', return_sequences=False),
+            # tf.keras.layers.Dropout(0.2),
             tf.keras.layers.Dense(64, activation='relu'),
             tf.keras.layers.Dense(32, activation='relu'),
+
+            tf.keras.layers.Dense(16, activation='relu'),
+            tf.keras.layers.Dropout(0.2),
             tf.keras.layers.Dense(1)
         ])
         print("Создана новая модель.")
@@ -96,17 +100,18 @@ def get_repeat_count():
             print("Пожалуйста, вводите целое число")
 
 
-sequence_length: int = 30
+sequence_length: int = 10
 
 
 def neural_network_guess_with_memory(model, target, log: bool):
     history = []
 
-    for attempt in range(1, 101):
+    for attempt in range(1, 20):
         if len(history) < sequence_length:
             padded_history = [[0, 0]] * (sequence_length - len(history)) + history
         else:
             padded_history = history[-sequence_length:]
+        # print(padded_history)
 
         input_sequence = np.array([padded_history])
 
@@ -125,13 +130,15 @@ def neural_network_guess_with_memory(model, target, log: bool):
         history.append([guess, feedback])
 
         target_value = target if feedback == 1 else target - 1
-        model.fit(input_sequence, np.array([[target_value]]), epochs=5, verbose=0)
+        model.fit(input_sequence, np.array([[target_value]]), epochs=1, verbose=0)
 
     print("Не удалось угадать число за 100 попыток.")
     return [100, target]
 
+
 def main():
-    model_info: dict = {"name": "my_memory_model_test4.keras", "path": "my_memory_model4_test.keras"}
+    name: str = "model5Layers_test1.keras"
+    model_info: dict = {"name": name, "path": name}
     repeat_count: int = get_repeat_count()
     my_model = get_model_with_memory(model_info["name"], model_info["path"])
 
@@ -144,16 +151,43 @@ def main():
         count += 1
 
     saveModel(my_model, model_info["name"])
-    # average: float = sum(attempts) / len(attempts)
-    # print(f"Среднее количество попыток: {average:.1f}")
-    # print(f"Max: {max(attempts)}\nMin: {min(attempts)}")
+    average: float = sum(attempts) / len(attempts)
+    print(f"Среднее количество попыток: {average:.1f}")
+    print(f"Max: {max(attempts)}\nMin: {min(attempts)}")
 
     data_frame = pd.DataFrame(attempts)
     try:
         print("Table save!")
     except:
         print("Error")
-    data_frame.to_csv("table_memory6.csv", index=False, header=False)
+    data_frame.to_csv("table/table_memory6.csv", index=False, header=False)
 
 
-main()
+def getNumeric(prompt: str):
+    while True:
+        response = input(prompt)
+
+        try:
+            return_response: int = int(response)
+            if return_response < 1:
+                print("Number can't lower 1")
+            else:
+                return return_response
+        except ValueError:
+            print("please enter a number")
+
+
+def play():
+    name: str = "model5Layers_test1.keras"
+    model_info: dict = {"name": name, "path": name}
+    # repeat_count: int = get_repeat_count()
+    my_model = get_model_with_memory(model_info["name"], model_info["path"])
+
+    print("The game with NN")
+    while True:
+        player_value: int = getNumeric("Enter your value and NN try to predict you number: ")
+        neural_network_guess_with_memory(my_model, player_value, True)
+
+
+# main()
+play()
